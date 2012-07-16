@@ -106,5 +106,4 @@ class ReverseSelectRelatedTestCase(TestCase):
 
         with self.assertNumQueries(1):
             image = Image.objects.select_related('product').get()
-            with self.assertRaises(Product.DoesNotExist):
-                image.product
+            self.assertEquals(image.product, None)

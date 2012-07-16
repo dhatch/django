@@ -268,7 +268,7 @@ class SingleRelatedObjectDescriptor(object):
             else:
                 rel_obj = None
             setattr(instance, self.cache_name, rel_obj)
-        if rel_obj is None:
+        if rel_obj is None and not self.related.field.null:
             raise self.related.model.DoesNotExist
         else:
             return rel_obj

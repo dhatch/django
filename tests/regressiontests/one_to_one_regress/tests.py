@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 from django.test import TestCase
 
-from .models import Place, Restaurant, Bar, Favorites, Target, UndergroundBar
+from .models import Place, Restaurant, Bar, Favorites, Target, UndergroundBar,Pointer2
 
 
 class OneToOneRegressionTests(TestCase):
@@ -199,9 +199,7 @@ class OneToOneRegressionTests(TestCase):
             self.assertEqual(self.p1.undergroundbar, b)
         b.place = None
         b.save()
-        with self.assertNumQueries(0):
-            with self.assertRaises(UndergroundBar.DoesNotExist):
-                self.p1.undergroundbar
+        self.assertEqual(self.p1.undergroundbar, None)
     
     def test_no_pk_one_to_one_raise_does_not_exist(self):
         """
@@ -211,12 +209,12 @@ class OneToOneRegressionTests(TestCase):
         accessed from an object with no pk (which has not been saved)
         """
 
-        UndergroundBar.objects.create()
-        UndergroundBar.objects.create()
+        Pointer2.objects.create(other=Target.objects.create())
+        Pointer2.objects.create(other=Target.objects.create())
         
-        p = Place()
-        with self.assertRaises(UndergroundBar.DoesNotExist):
-            p.undergroundbar
+        t = Target()
+        with self.assertRaises(Pointer2.DoesNotExist):
+            t.pointer2
 
     def test_no_pk_one_data_one_to_one_raise_does_not_exist(self):
         """
@@ -227,10 +225,11 @@ class OneToOneRegressionTests(TestCase):
         with one data in db.
         """
         
-        UndergroundBar.objects.create()
-        p = Place()
-        with self.assertRaises(UndergroundBar.DoesNotExist):
-            p.undergroundbar
+        Pointer2.objects.create(other=Target.objects.create())
+        
+        t = Target()
+        with self.assertRaises(Pointer2.DoesNotExist):
+            t.pointer2
                     
     def test_no_pk_no_data_one_to_one_raise_does_not_exist(self):
         """
@@ -240,8 +239,49 @@ class OneToOneRegressionTests(TestCase):
         accessed from an object with no pk (which has not been saved)
         with no data in db.
         """
+        
+        t = Target()
+        with self.assertRaises(Pointer2.DoesNotExist):
+            t.pointer2
+    
+    def test_no_pk_one_to_one_return_none(self):
+        """
+        Regression for #18153
+
+        A reverse one to one returns None when it is 
+        accessed from an object with no pk (which has not been saved)
+        which has null=True on the relation.
+        """
+
+        UndergroundBar.objects.create()
+        UndergroundBar.objects.create()
 
         p = Place()
-        with self.assertRaises(UndergroundBar.DoesNotExist):
-            p.undergroundbar
-    
+        self.assertEquals(p.undergroundbar, None)
+
+    def test_no_pk_one_data_one_to_one_return_none(self):
+        """
+        Regression for #18153
+
+        A reverse one to one returns None when it is 
+        accessed from an object with no pk (which has not been saved)
+        with one data in db which has null=True on the relation.
+        """
+
+        UndergroundBar.objects.create()
+
+        p = Place()
+        self.assertEquals(p.undergroundbar, None)
+        
+
+    def test_no_pk_no_data_one_to_one_return_none(self):
+        """
+        Regression for #18153
+
+        A reverse one to one returns None when it is 
+        accessed from an object with no pk (which has not been saved)
+        with no data in db which has null=True on the relation.
+        """
+
+        p = Place()
+        self.assertEquals(p.undergroundbar, None)
