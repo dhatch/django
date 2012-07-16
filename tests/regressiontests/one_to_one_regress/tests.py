@@ -202,3 +202,46 @@ class OneToOneRegressionTests(TestCase):
         with self.assertNumQueries(0):
             with self.assertRaises(UndergroundBar.DoesNotExist):
                 self.p1.undergroundbar
+    
+    def test_no_pk_one_to_one_raise_does_not_exist(self):
+        """
+        Regression for #18153
+        
+        A reverse one to one raises a DoesNotExist exception when it is 
+        accessed from an object with no pk (which has not been saved)
+        """
+
+        UndergroundBar.objects.create()
+        UndergroundBar.objects.create()
+        
+        p = Place()
+        with self.assertRaises(UndergroundBar.DoesNotExist):
+            p.undergroundbar
+
+    def test_no_pk_one_data_one_to_one_raise_does_not_exist(self):
+        """
+        Regression for #18153
+
+        A reverse one to one raises a DoesNotExist exception when it is 
+        accessed from an object with no pk (which has not been saved)
+        with one data in db.
+        """
+        
+        UndergroundBar.objects.create()
+        p = Place()
+        with self.assertRaises(UndergroundBar.DoesNotExist):
+            p.undergroundbar
+                    
+    def test_no_pk_no_data_one_to_one_raise_does_not_exist(self):
+        """
+        Regression for #18153
+
+        A reverse one to one raises a DoesNotExist exception when it is 
+        accessed from an object with no pk (which has not been saved)
+        with no data in db.
+        """
+
+        p = Place()
+        with self.assertRaises(UndergroundBar.DoesNotExist):
+            p.undergroundbar
+    

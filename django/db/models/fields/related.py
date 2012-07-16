@@ -256,13 +256,17 @@ class SingleRelatedObjectDescriptor(object):
         try:
             rel_obj = getattr(instance, self.cache_name)
         except AttributeError:
-            params = {'%s__pk' % self.related.field.name: instance._get_pk_val()}
-            try:
-                rel_obj = self.get_query_set(instance=instance).get(**params)
-            except self.related.model.DoesNotExist:
-                rel_obj = None
+            pk = instance._get_pk_val()
+            if pk:
+                params = {'%s__pk' % self.related.field.name: pk}
+                try:
+                    rel_obj = self.get_query_set(instance=instance).get(**params)
+                except self.related.model.DoesNotExist:
+                    rel_obj = None
+                else:
+                    setattr(rel_obj, self.related.field.get_cache_name(), instance)
             else:
-                setattr(rel_obj, self.related.field.get_cache_name(), instance)
+                rel_obj = None
             setattr(instance, self.cache_name, rel_obj)
         if rel_obj is None:
             raise self.related.model.DoesNotExist
